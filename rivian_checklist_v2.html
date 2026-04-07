@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Checklist v2 – Rivian Upper Body</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f4f4f0;
+    min-height: 100vh;
+    padding: 1.5rem 1rem 3rem;
+    color: #1a1a1a;
+  }
+
+  .card {
+    max-width: 760px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e0dfd8;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  .header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: 1px solid #e0dfd8;
+  }
+  .header-tags { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .tag { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; letter-spacing: 0.02em; }
+  .tag-ref   { background: #FAEEDA; color: #633806; }
+  .tag-proj  { background: #efefef; color: #555; }
+  .tag-date  { background: #FAECE7; color: #712B13; }
+  .header-title { font-size: 16px; font-weight: 600; color: #111; }
+  .header-sub   { font-size: 12px; color: #888; margin-top: 3px; }
+
+  #name-bar {
+    padding: 0.7rem 1.5rem;
+    border-bottom: 1px solid #e0dfd8;
+    display: flex; align-items: center; gap: 10px;
+  }
+  #name-bar label { font-size: 12px; color: #666; white-space: nowrap; }
+  #name-input {
+    font-size: 12px; padding: 5px 10px; border-radius: 8px;
+    border: 1px solid #ddd; background: #fafaf8; color: #222;
+    outline: none; flex: 1; max-width: 240px;
+  }
+  #name-input:focus { border-color: #888; }
+
+  .online-bar {
+    padding: 0.4rem 1.5rem;
+    font-size: 11px; color: #888;
+    border-bottom: 1px solid #f0efea;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .online-dot { width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .tabs-wrap {
+    display: flex; overflow-x: auto;
+    border-bottom: 1px solid #e0dfd8;
+    scrollbar-width: none; background: #fafaf8;
+  }
+  .tabs-wrap::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0; padding: 0.65rem 1.2rem;
+    font-size: 13px; font-weight: 500; color: #888;
+    cursor: pointer; border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap; display: flex; align-items: center; gap: 7px;
+    user-select: none;
+  }
+  .tab:hover { color: #333; }
+  .tab.active { color: #111; border-bottom-color: #BA7517; }
+  .tab-pill {
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 20px;
+    background: #e8e8e2; color: #666;
+    min-width: 20px; text-align: center;
+  }
+  .tab.active .tab-pill { background: #FAEEDA; color: #633806; }
+
+  .progress-wrap { height: 4px; background: #f0efea; }
+  .progress-fill { height: 4px; background: #BA7517; transition: width 0.35s ease; width: 0%; }
+
+  .summary-bar {
+    display: flex; gap: 1rem;
+    padding: 0.65rem 1.5rem;
+    border-bottom: 1px solid #f0efea; flex-wrap: wrap;
+  }
+  .sum-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #666; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .dot-ok      { background: #1D9E75; }
+  .dot-nok     { background: #D85A30; }
+  .dot-review  { background: #BA7517; }
+  .dot-pending { background: #ccc; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .item {
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid #f0efea;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .item:last-child { border-bottom: none; }
+  .item-left { flex: 1; }
+  .item-desc { font-size: 13px; color: #222; line-height: 1.55; margin-bottom: 8px; }
+  .item-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  select, input[type="text"] {
+    font-size: 12px; padding: 4px 9px;
+    border-radius: 8px; border: 1px solid #ddd;
+    background: #fafaf8; color: #222;
+    outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input[type="text"]:focus { border-color: #888; }
+  select.ok     { border-color: #1D9E75; color: #085041; background: #E1F5EE; }
+  select.nok    { border-color: #D85A30; color: #712B13; background: #FAECE7; }
+  select.review { border-color: #BA7517; color: #633806; background: #FAEEDA; }
+  input[type="text"] { flex: 1; min-width: 130px; }
+  input[type="text"]::placeholder { color: #bbb; }
+
+  .item-num {
+    font-size: 11px; font-weight: 600; color: #bbb;
+    margin-top: 2px; flex-shrink: 0; min-width: 18px; text-align: right;
+  }
+
+  .footer {
+    padding: 0.9rem 1.5rem;
+    border-top: 1px solid #e0dfd8;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; background: #fafaf8;
+  }
+  .footer-ref { font-size: 11px; color: #aaa; }
+  .footer-ref a { color: #633806; text-decoration: none; }
+  .saved-indicator { font-size: 11px; color: #1D9E75; opacity: 0; transition: opacity 0.4s; }
+  .saved-indicator.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="header">
+    <div class="header-tags">
+      <span class="tag tag-ref">RBMU-1488</span>
+      <span class="tag tag-proj">Rivian · Upper Body</span>
+      <span class="tag tag-date">Checklist v2</span>
+    </div>
+    <div class="header-title">Ops – PE – UpperBody checklist</div>
+    <div class="header-sub" id="global-sub">Cargando...</div>
+  </div>
+
+  <div id="name-bar">
+    <label for="name-input">Tu nombre:</label>
+    <input type="text" id="name-input" placeholder="Escribe tu nombre..." maxlength="40" />
+  </div>
+
+  <div class="online-bar">
+    <span class="online-dot"></span>
+    <span id="online-text">Conectando...</span>
+  </div>
+
+  <div class="tabs-wrap" id="tabs-wrap"></div>
+
+  <div class="progress-wrap">
+    <div class="progress-fill" id="progress-bar"></div>
+  </div>
+
+  <div class="summary-bar">
+    <div class="sum-item"><span class="dot dot-ok"></span><span id="cnt-ok">0 OK</span></div>
+    <div class="sum-item"><span class="dot dot-nok"></span><span id="cnt-nok">0 NOK</span></div>
+    <div class="sum-item"><span class="dot dot-review"></span><span id="cnt-review">0 En revisión</span></div>
+    <div class="sum-item"><span class="dot dot-pending"></span><span id="cnt-pending">– Pendiente</span></div>
+  </div>
+
+  <div id="panels"></div>
+
+  <div class="footer">
+    <div class="footer-ref">
+      Ref. informativa: <a href="#" target="_blank">[RBMU-1488] Ops – PE – UpperBody – Rivian</a>
+    </div>
+    <span class="saved-indicator" id="saved-indicator">✓ Guardado</span>
+  </div>
+
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDtSPeKqcCBxv5RReaQBgquj4O0lpiD6jM",
+    authDomain: "checklist-a6b0f.firebaseapp.com",
+    databaseURL: "https://checklist-a6b0f-default-rtdb.firebaseio.com",
+    projectId: "checklist-a6b0f",
+    storageBucket: "checklist-a6b0f.firebasestorage.app",
+    messagingSenderId: "497629979786",
+    appId: "1:497629979786:web:4dcee633eaafa063e37973",
+    measurementId: "G-V63GNHJNGX"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getDatabase(app);
+
+  // ─── NODO FIREBASE INDEPENDIENTE ─────────────────────────────────
+  // "checklist3" — completamente separado de la checklist anterior ("checklist2")
+  const FB_NODE = "checklist3";
+
+  // ─── CHECKLIST DATA ───────────────────────────────────────────────
+  // Para añadir items: añade al final del array con un id nuevo único.
+  // Nunca cambies ni reutilices ids existentes o perderás el progreso.
+  const AREAS = [
+    {
+      key: "UBMN",
+      label: "UBMN",
+      items: [
+        { id: "ubmn-01", desc: "Retirar señales CC_RBX." },
+        { id: "ubmn-02", desc: "Comentarios CompletePerms de las cámaras (ej. Process_034R_HL9State[2].CompletePerms.4)." },
+        { id: "ubmn-03", desc: "020: FFR — gran importancia en los SPR." },
+        { id: "ubmn-04", desc: "030: FFR." },
+        { id: "ubmn-05", desc: "050: FFR y AbortPick. También comprobar rechazo de bolt, etc." },
+        { id: "ubmn-06", desc: "FFR / AbortPick: demás estaciones." },
+      ]
+    },
+    {
+      key: "FRM1",
+      label: "FRM1",
+      items: [
+        { id: "frm1-01", desc: "Retirar señales CC_RBX." },
+        { id: "frm1-02", desc: "020: FFR." },
+        { id: "frm1-03", desc: "030: FFR." },
+      ]
+    },
+    {
+      key: "BSOL",
+      label: "BSOL",
+      items: [
+        { id: "bsol-01", desc: "Retirar señales CC_RBX." },
+        { id: "bsol-02", desc: "040: FFR." },
+        { id: "bsol-03", desc: "080: FFR." },
+        { id: "bsol-04", desc: "105: FFR." },
+        { id: "bsol-05", desc: "Air Weld 040 & 100: FFR." },
+        { id: "bsol-06", desc: "090: FFR." },
+        { id: "bsol-07", desc: "Test dryrun APC." },
+      ]
+    },
+    {
+      key: "BSOR",
+      label: "BSOR",
+      items: [
+        { id: "bsor-01", desc: "Retirar señales CC_RBX." },
+        { id: "bsor-02", desc: "040: FFR." },
+        { id: "bsor-03", desc: "080: FFR." },
+        { id: "bsor-04", desc: "105: FFR." },
+        { id: "bsor-05", desc: "Air Weld 040 & 100: FFR." },
+        { id: "bsor-06", desc: "090: FFR." },
+        { id: "bsor-07", desc: "Test dryrun APC." },
+      ]
+    },
+    {
+      key: "FRM2",
+      label: "FRM2",
+      items: [
+        { id: "frm2-01", desc: "Retirar señales CC_RBX." },
+        { id: "frm2-02", desc: "PLC1: FFR de todas las estaciones." },
+        { id: "frm2-03", desc: "060: FFR." },
+        { id: "frm2-04", desc: "055: AbortPick & FFR." },
+      ]
+    },
+    {
+      key: "DRNG",
+      label: "DRNG",
+      items: [
+        { id: "drng-01", desc: "Retirar señales CC_RBX." },
+        { id: "drng-02", desc: "025: FFR." },
+        { id: "drng-03", desc: "Test dryrun APC." },
+      ]
+    },
+  ];
+
+  let fbData = {};
+  let activeKey = AREAS[0].key;
+
+  // ─── DOM BUILD ────────────────────────────────────────────────────
+  const tabsWrap = document.getElementById("tabs-wrap");
+  const panelsEl = document.getElementById("panels");
+
+  AREAS.forEach(area => {
+    const tab = document.createElement("div");
+    tab.className = "tab" + (area.key === activeKey ? " active" : "");
+    tab.dataset.key = area.key;
+    tab.innerHTML = `${area.label} <span class="tab-pill" id="pill-${area.key}">0/${area.items.length}</span>`;
+    tab.addEventListener("click", () => switchTab(area.key));
+    tabsWrap.appendChild(tab);
+
+    const panel = document.createElement("div");
+    panel.className = "panel" + (area.key === activeKey ? " active" : "");
+    panel.id = "panel-" + area.key;
+
+    area.items.forEach((item, idx) => {
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <span class="item-num">${idx + 1}</span>
+        <div class="item-left">
+          <div class="item-desc">${item.desc}</div>
+          <div class="item-controls">
+            <select class="status-select" id="sel-${area.key}-${item.id}">
+              <option value="pending">— Pendiente</option>
+              <option value="ok">✓ OK</option>
+              <option value="nok">✗ NOK</option>
+              <option value="review">↺ En revisión</option>
+            </select>
+            <input type="text" id="cmt-${area.key}-${item.id}" placeholder="Comentario / responsable..." />
+          </div>
+        </div>
+      `;
+      panel.appendChild(div);
+    });
+
+    panelsEl.appendChild(panel);
+  });
+
+  AREAS.forEach(area => {
+    area.items.forEach(item => {
+      document.getElementById(`sel-${area.key}-${item.id}`).addEventListener("change", () => writeItem(area.key, item.id));
+      document.getElementById(`cmt-${area.key}-${item.id}`).addEventListener("change",  () => writeItem(area.key, item.id));
+    });
+  });
+
+  // ─── TAB SWITCH ───────────────────────────────────────────────────
+  function switchTab(key) {
+    activeKey = key;
+    document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.key === key));
+    document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "panel-" + key));
+    updateSummary();
+  }
+
+  // ─── FIREBASE WRITE ───────────────────────────────────────────────
+  const nameInput = document.getElementById("name-input");
+  nameInput.value = localStorage.getItem("checklist_name") || "";
+  nameInput.addEventListener("input", () => localStorage.setItem("checklist_name", nameInput.value));
+
+  let saveTimer;
+  function flashSaved() {
+    const el = document.getElementById("saved-indicator");
+    el.classList.add("show");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => el.classList.remove("show"), 2000);
+  }
+
+  function writeItem(areaKey, itemId) {
+    const selEl = document.getElementById(`sel-${areaKey}-${itemId}`);
+    const cmtEl = document.getElementById(`cmt-${areaKey}-${itemId}`);
+    const user  = nameInput.value.trim() || "Anónimo";
+    set(ref(db, `${FB_NODE}/${areaKey}/${itemId}`), {
+      status:  selEl.value,
+      comment: cmtEl.value,
+      user,
+      ts: Date.now()
+    });
+    flashSaved();
+  }
+
+  // ─── SUMMARY ──────────────────────────────────────────────────────
+  function updateSummary() {
+    const area = AREAS.find(a => a.key === activeKey);
+    let ok=0, nok=0, review=0, pending=0;
+    area.items.forEach(item => {
+      const d = fbData[activeKey] && fbData[activeKey][item.id];
+      const s = d ? d.status : "pending";
+      if      (s === "ok")     ok++;
+      else if (s === "nok")    nok++;
+      else if (s === "review") review++;
+      else                     pending++;
+    });
+    const done  = ok + nok + review;
+    const total = area.items.length;
+    document.getElementById("progress-bar").style.width = Math.round((done / total) * 100) + "%";
+    document.getElementById("cnt-ok").textContent      = ok      + " OK";
+    document.getElementById("cnt-nok").textContent     = nok     + " NOK";
+    document.getElementById("cnt-review").textContent  = review  + " En revisión";
+    document.getElementById("cnt-pending").textContent = pending + " Pendiente";
+
+    let gDone=0, gTotal=0;
+    AREAS.forEach(a => {
+      gTotal += a.items.length;
+      a.items.forEach(item => {
+        const d = fbData[a.key] && fbData[a.key][item.id];
+        if (d && d.status !== "pending") gDone++;
+      });
+    });
+    document.getElementById("global-sub").textContent =
+      `${gDone} de ${gTotal} puntos completados en total`;
+  }
+
+  function updatePills() {
+    AREAS.forEach(area => {
+      let done = 0;
+      area.items.forEach(item => {
+        const d = fbData[area.key] && fbData[area.key][item.id];
+        if (d && d.status !== "pending") done++;
+      });
+      const pill = document.getElementById(`pill-${area.key}`);
+      if (pill) pill.textContent = `${done}/${area.items.length}`;
+    });
+  }
+
+  // ─── REALTIME LISTENER ────────────────────────────────────────────
+  onValue(ref(db, FB_NODE), (snapshot) => {
+    document.getElementById("online-text").textContent = "Sincronizado en tiempo real";
+    fbData = snapshot.val() || {};
+
+    AREAS.forEach(area => {
+      area.items.forEach(item => {
+        const selEl = document.getElementById(`sel-${area.key}-${item.id}`);
+        const cmtEl = document.getElementById(`cmt-${area.key}-${item.id}`);
+        const d = fbData[area.key] && fbData[area.key][item.id];
+        if (d) {
+          if (document.activeElement !== selEl) {
+            selEl.value = d.status || "pending";
+            selEl.className = "status-select " + (d.status || "pending");
+          }
+          if (document.activeElement !== cmtEl) {
+            cmtEl.value = d.comment || "";
+          }
+        }
+      });
+    });
+
+    updatePills();
+    updateSummary();
+  }, (err) => {
+    document.getElementById("online-text").textContent = "Error de conexión — " + err.message;
+  });
+</script>
+</body>
+</html>
