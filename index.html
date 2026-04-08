@@ -110,6 +110,15 @@
   .item-left { flex: 1; }
   .item-desc { font-size: 13px; color: #222; line-height: 1.55; margin-bottom: 8px; }
   .item-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .screenshot-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .shot-input { font-size: 12px; }
+  .shot-preview { display: none; max-width: 220px; max-height: 140px; border-radius: 10px; border: 1px solid #ddd; background: #fafaf8; }
+  .shot-preview.show { display: block; }
+  .shot-link, .shot-remove {
+    font-size: 11px; text-decoration: none; padding: 5px 8px; border-radius: 8px; border: 1px solid #ddd;
+    background: #fafaf8; color: #633806; cursor: pointer;
+  }
+  .shot-remove { color: #712B13; }
 
   select, input[type="text"] {
     font-size: 12px; padding: 4px 9px;
@@ -334,6 +343,12 @@
             </select>
             <input type="text" id="cmt-${area.key}-${item.id}" placeholder="Comentario / responsable..." />
           </div>
+          <div class="screenshot-row">
+            <input class="shot-input" type="file" id="img-${area.key}-${item.id}" accept="image/*" />
+            <a class="shot-link" id="lnk-${area.key}-${item.id}" href="#" target="_blank" style="display:none">Ver screenshot</a>
+            <button class="shot-remove" id="rm-${area.key}-${item.id}" type="button" style="display:none">Quitar</button>
+            <img class="shot-preview" id="prv-${area.key}-${item.id}" alt="Screenshot adjunto" />
+          </div>
         </div>
       `;
       panel.appendChild(div);
@@ -346,6 +361,8 @@
     area.items.forEach(item => {
       document.getElementById(`sel-${area.key}-${item.id}`).addEventListener("change", () => writeItem(area.key, item.id));
       document.getElementById(`cmt-${area.key}-${item.id}`).addEventListener("change",  () => writeItem(area.key, item.id));
+      document.getElementById(`img-${area.key}-${item.id}`).addEventListener("change",  () => writeItem(area.key, item.id, { uploadScreenshot: true }));
+      document.getElementById(`rm-${area.key}-${item.id}`).addEventListener("click",   () => removeScreenshot(area.key, item.id));
     });
   });
 
@@ -370,16 +387,91 @@
     saveTimer = setTimeout(() => el.classList.remove("show"), 2000);
   }
 
-  function writeItem(areaKey, itemId) {
+  async function fileToCompressedDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxWidth = 1280;
+          const scale = Math.min(1, maxWidth / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function updateScreenshotUi(areaKey, itemId, screenshot) {
+    const previewEl = document.getElementById(`prv-${areaKey}-${itemId}`);
+    const linkEl = document.getElementById(`lnk-${areaKey}-${itemId}`);
+    const removeEl = document.getElementById(`rm-${areaKey}-${itemId}`);
+
+    if (screenshot) {
+      previewEl.src = screenshot;
+      previewEl.classList.add('show');
+      linkEl.href = screenshot;
+      linkEl.style.display = '';
+      removeEl.style.display = '';
+    } else {
+      previewEl.src = '';
+      previewEl.classList.remove('show');
+      linkEl.removeAttribute('href');
+      linkEl.style.display = 'none';
+      removeEl.style.display = 'none';
+    }
+  }
+
+  async function writeItem(areaKey, itemId, options = {}) {
     const selEl = document.getElementById(`sel-${areaKey}-${itemId}`);
     const cmtEl = document.getElementById(`cmt-${areaKey}-${itemId}`);
+    const imgEl = document.getElementById(`img-${areaKey}-${itemId}`);
     const user  = nameInput.value.trim() || "Anónimo";
-    set(ref(db, `${FB_NODE}/${areaKey}/${itemId}`), {
-      status:  selEl.value,
+    const previous = (fbData[areaKey] && fbData[areaKey][itemId]) || {};
+
+    let screenshot = previous.screenshot || '';
+    if (options.uploadScreenshot && imgEl.files && imgEl.files[0]) {
+      screenshot = await fileToCompressedDataUrl(imgEl.files[0]);
+      imgEl.value = '';
+    }
+
+    await set(ref(db, `${FB_NODE}/${areaKey}/${itemId}`), {
+      status: selEl.value,
       comment: cmtEl.value,
+      screenshot,
       user,
       ts: Date.now()
     });
+
+    updateScreenshotUi(areaKey, itemId, screenshot);
+    flashSaved();
+  }
+
+  async function removeScreenshot(areaKey, itemId) {
+    const previous = (fbData[areaKey] && fbData[areaKey][itemId]) || {};
+    const selEl = document.getElementById(`sel-${areaKey}-${itemId}`);
+    const cmtEl = document.getElementById(`cmt-${areaKey}-${itemId}`);
+    const imgEl = document.getElementById(`img-${areaKey}-${itemId}`);
+    const user  = nameInput.value.trim() || "Anónimo";
+
+    await set(ref(db, `${FB_NODE}/${areaKey}/${itemId}`), {
+      status: selEl.value,
+      comment: cmtEl.value,
+      screenshot: '',
+      user,
+      ts: Date.now()
+    });
+
+    imgEl.value = '';
+    updateScreenshotUi(areaKey, itemId, '');
     flashSaved();
   }
 
@@ -445,6 +537,9 @@
           if (document.activeElement !== cmtEl) {
             cmtEl.value = d.comment || "";
           }
+          updateScreenshotUi(area.key, item.id, d.screenshot || '');
+        } else {
+          updateScreenshotUi(area.key, item.id, '');
         }
       });
     });
