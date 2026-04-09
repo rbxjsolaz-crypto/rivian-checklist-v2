@@ -217,13 +217,8 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
-  // ─── NODO FIREBASE INDEPENDIENTE ─────────────────────────────────
-  // "checklist3" — completamente separado de la checklist anterior ("checklist2")
   const FB_NODE = "checklist3";
 
-  // ─── CHECKLIST DATA ───────────────────────────────────────────────
-  // Para añadir items: añade al final del array con un id nuevo único.
-  // Nunca cambies ni reutilices ids existentes o perderás el progreso.
   const AREAS = [
     {
       key: "UBMN",
@@ -238,6 +233,9 @@
         { id: "ubmn-07", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "ubmn-08", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
         { id: "ubmn-09", desc: "Pasar una carrocería hacia atrás en “cmdindexprev” y en jogreverse. Incluyendo VDL y buffer." },
+        { id: "ubmn-10", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "ubmn-11", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "ubmn-12", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
       ]
     },
     {
@@ -250,6 +248,9 @@
         { id: "frm1-04", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "frm1-05", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
         { id: "frm1-06", desc: "Pasar una carrocería hacia atrás en “cmdindexprev” y en jogreverse. Incluyendo VDL y buffer." },
+        { id: "frm1-07", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "frm1-08", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "frm1-09", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
       ]
     },
     {
@@ -265,6 +266,10 @@
         { id: "bsol-07", desc: "Test dryrun APC." },
         { id: "bsol-08", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "bsol-09", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
+        { id: "bsol-10", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "bsol-11", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "bsol-12", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
+        { id: "bsol-13", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
       ]
     },
     {
@@ -280,6 +285,10 @@
         { id: "bsor-07", desc: "Test dryrun APC." },
         { id: "bsor-08", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "bsor-09", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
+        { id: "bsor-10", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "bsor-11", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "bsor-12", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
+        { id: "bsor-13", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
       ]
     },
     {
@@ -293,6 +302,9 @@
         { id: "frm2-05", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "frm2-06", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
         { id: "frm2-07", desc: "Pasar una carrocería hacia atrás en “cmdindexprev” y en jogreverse. Incluyendo VDL y buffer." },
+        { id: "frm2-08", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "frm2-09", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "frm2-10", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
       ]
     },
     {
@@ -304,6 +316,10 @@
         { id: "drng-03", desc: "Test dryrun APC." },
         { id: "drng-04", desc: "Revisar “Rbt.inpAdjacentRbtTeach”, solo deben de condicionar los robots con los que interactúan." },
         { id: "drng-05", desc: "Revisar “Rbt.cmdReset”, deben de estar todas las fixture en las que trabaja." },
+        { id: "drng-06", desc: "Update Icon for Ethernet Switches in the Devices Screen 3751. Ejemplo FSTR." },
+        { id: "drng-07", desc: "Replace gate icon on safety screens for better identification 3477. Ejemplo FSTR." },
+        { id: "drng-08", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
+        { id: "drng-09", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
       ]
     },
   ];
@@ -311,7 +327,6 @@
   let fbData = {};
   let activeKey = AREAS[0].key;
 
-  // ─── DOM BUILD ────────────────────────────────────────────────────
   const tabsWrap = document.getElementById("tabs-wrap");
   const panelsEl = document.getElementById("panels");
 
@@ -366,7 +381,6 @@
     });
   });
 
-  // ─── TAB SWITCH ───────────────────────────────────────────────────
   function switchTab(key) {
     activeKey = key;
     document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.key === key));
@@ -374,7 +388,6 @@
     updateSummary();
   }
 
-  // ─── FIREBASE WRITE ───────────────────────────────────────────────
   const nameInput = document.getElementById("name-input");
   nameInput.value = localStorage.getItem("checklist_name") || "";
   nameInput.addEventListener("input", () => localStorage.setItem("checklist_name", nameInput.value));
@@ -456,7 +469,6 @@
   }
 
   async function removeScreenshot(areaKey, itemId) {
-    const previous = (fbData[areaKey] && fbData[areaKey][itemId]) || {};
     const selEl = document.getElementById(`sel-${areaKey}-${itemId}`);
     const cmtEl = document.getElementById(`cmt-${areaKey}-${itemId}`);
     const imgEl = document.getElementById(`img-${areaKey}-${itemId}`);
@@ -475,7 +487,6 @@
     flashSaved();
   }
 
-  // ─── SUMMARY ──────────────────────────────────────────────────────
   function updateSummary() {
     const area = AREAS.find(a => a.key === activeKey);
     let ok=0, nok=0, review=0, pending=0;
@@ -519,7 +530,6 @@
     });
   }
 
-  // ─── REALTIME LISTENER ────────────────────────────────────────────
   onValue(ref(db, FB_NODE), (snapshot) => {
     document.getElementById("online-text").textContent = "Sincronizado en tiempo real";
     fbData = snapshot.val() || {};
