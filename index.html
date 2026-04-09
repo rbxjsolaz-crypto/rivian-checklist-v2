@@ -217,8 +217,13 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
+  // ─── NODO FIREBASE INDEPENDIENTE ─────────────────────────────────
+  // "checklist3" — completamente separado de la checklist anterior ("checklist2")
   const FB_NODE = "checklist3";
 
+  // ─── CHECKLIST DATA ───────────────────────────────────────────────
+  // Para añadir items: añade al final del array con un id nuevo único.
+  // Nunca cambies ni reutilices ids existentes o perderás el progreso.
   const AREAS = [
     {
       key: "UBMN",
@@ -238,6 +243,7 @@
         { id: "ubmn-12", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
         { id: "ubmn-13", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "ubmn-14", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "ubmn-15", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
     {
@@ -255,6 +261,7 @@
         { id: "frm1-09", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
         { id: "frm1-10", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "frm1-11", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "frm1-12", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
     {
@@ -276,6 +283,7 @@
         { id: "bsol-13", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
         { id: "bsol-14", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "bsol-15", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "bsol-16", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
     {
@@ -297,6 +305,7 @@
         { id: "bsor-13", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
         { id: "bsor-14", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "bsor-15", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "bsor-16", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
     {
@@ -315,6 +324,7 @@
         { id: "frm2-10", desc: "Sealer nozzle detection sensors are not optimized. They should be pointing at the tip of the sealer and also within less than 5 mm tolerance 3442." },
         { id: "frm2-11", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "frm2-12", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "frm2-13", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
     {
@@ -332,6 +342,7 @@
         { id: "drng-09", desc: "Revisar que los movimientos manuales del APC no provoquen atoramientos de paletas." },
         { id: "drng-10", desc: "Mostrar en HMI nuevos paths de robots para CycleTime." },
         { id: "drng-11", desc: "Mostrar en HMI nuevos fixedstate o transition para CycleTime." },
+        { id: "drng-12", desc: "En Mapio - Consumed debe de estar un fill a 0 y sus alarmas para cuando se pierde conexión de todos los PLCs con los que comunica. Ejemplo DRNG." },
       ]
     },
   ];
@@ -339,6 +350,7 @@
   let fbData = {};
   let activeKey = AREAS[0].key;
 
+  // ─── DOM BUILD ────────────────────────────────────────────────────
   const tabsWrap = document.getElementById("tabs-wrap");
   const panelsEl = document.getElementById("panels");
 
@@ -393,6 +405,7 @@
     });
   });
 
+  // ─── TAB SWITCH ───────────────────────────────────────────────────
   function switchTab(key) {
     activeKey = key;
     document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.key === key));
@@ -400,6 +413,7 @@
     updateSummary();
   }
 
+  // ─── FIREBASE WRITE ───────────────────────────────────────────────
   const nameInput = document.getElementById("name-input");
   nameInput.value = localStorage.getItem("checklist_name") || "";
   nameInput.addEventListener("input", () => localStorage.setItem("checklist_name", nameInput.value));
@@ -481,6 +495,7 @@
   }
 
   async function removeScreenshot(areaKey, itemId) {
+    const previous = (fbData[areaKey] && fbData[areaKey][itemId]) || {};
     const selEl = document.getElementById(`sel-${areaKey}-${itemId}`);
     const cmtEl = document.getElementById(`cmt-${areaKey}-${itemId}`);
     const imgEl = document.getElementById(`img-${areaKey}-${itemId}`);
@@ -499,6 +514,7 @@
     flashSaved();
   }
 
+  // ─── SUMMARY ──────────────────────────────────────────────────────
   function updateSummary() {
     const area = AREAS.find(a => a.key === activeKey);
     let ok=0, nok=0, review=0, pending=0;
@@ -542,6 +558,7 @@
     });
   }
 
+  // ─── REALTIME LISTENER ────────────────────────────────────────────
   onValue(ref(db, FB_NODE), (snapshot) => {
     document.getElementById("online-text").textContent = "Sincronizado en tiempo real";
     fbData = snapshot.val() || {};
